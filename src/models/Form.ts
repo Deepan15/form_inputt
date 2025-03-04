@@ -11,9 +11,17 @@ export interface IForm extends Document {
     placeholder?: string;
     required: boolean;
     options?: string[];
+    maxFileSize?: number;
+    allowedFileTypes?: string[];
+    maxLength?: number;
+    minValue?: number;
+    maxValue?: number;
   }>;
   createdAt: Date;
   updatedAt: Date;
+  isPublic?: boolean;
+  expiresAt?: Date;
+  allowAnonymousResponses?: boolean;
 }
 
 const FormSchema: Schema = new Schema(
@@ -29,8 +37,16 @@ const FormSchema: Schema = new Schema(
         placeholder: { type: String },
         required: { type: Boolean, default: false },
         options: [{ type: String }],
+        maxFileSize: { type: Number },
+        allowedFileTypes: [{ type: String }],
+        maxLength: { type: Number },
+        minValue: { type: Number },
+        maxValue: { type: Number },
       },
     ],
+    isPublic: { type: Boolean, default: false },
+    expiresAt: { type: Date },
+    allowAnonymousResponses: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

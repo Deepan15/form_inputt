@@ -10,6 +10,11 @@ export interface FormField {
   placeholder?: string;
   required: boolean;
   options?: string[];
+  maxFileSize?: number; // For file uploads (in MB)
+  allowedFileTypes?: string[]; // For file uploads (e.g., ['image/jpeg', 'application/pdf'])
+  maxLength?: number; // For text inputs
+  minValue?: number; // For number inputs
+  maxValue?: number; // For number inputs
 }
 
 interface FormBuilderProps {
@@ -37,6 +42,11 @@ export default function FormBuilder({
     placeholder: '',
     required: false,
     options: [''],
+    maxFileSize: 5, // Default 5MB
+    allowedFileTypes: [],
+    maxLength: undefined,
+    minValue: undefined,
+    maxValue: undefined,
   });
   const [isEditing, setIsEditing] = useState(false);
   const [editIndex, setEditIndex] = useState(-1);
@@ -180,8 +190,13 @@ export default function FormBuilder({
               <option value="number">Number</option>
               <option value="date">Date</option>
               <option value="dropdown">Dropdown</option>
+              <option value="radio">Radio Buttons</option>
               <option value="checkbox">Checkbox</option>
               <option value="textarea">Text Area</option>
+              <option value="file">File Upload</option>
+              <option value="phone">Phone Number</option>
+              <option value="url">Website URL</option>
+              <option value="rating">Rating</option>
             </select>
           </div>
           <div>
@@ -263,34 +278,204 @@ export default function FormBuilder({
           </div>
         )}
 
-        <div className="mt-4 flex justify-end">
-          {isEditing && (
+        {currentField.type === 'radio' && (
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Radio Button Options *
+            </label>
+            {currentField.options?.map((option, index) => (
+              <div key={index} className="flex items-center mt-2">
+                <input
+                  type="text"
+                  value={option}
+                  onChange={(e) => handleOptionChange(index, e.target.value)}
+                  className="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder={`Option ${index + 1}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveOption(index)}
+                  className="ml-2 p-2 text-red-600 hover:text-red-800"
+                  disabled={currentField.options?.length === 1}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            ))}
             <button
               type="button"
-              onClick={() => {
-                setIsEditing(false);
-                setEditIndex(-1);
-                setCurrentField({
-                  id: '',
-                  type: 'text',
-                  label: '',
-                  placeholder: '',
-                  required: false,
-                  options: [''],
-                });
-              }}
-              className="mr-2 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              onClick={handleAddOption}
+              className="mt-2 inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Cancel
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+              </svg>
+              Add Option
+            </button>
+          </div>
+        )}
+
+        {currentField.type === 'file' && (
+          <div className="mt-4 space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Max File Size (MB)
+              </label>
+              <input
+                type="number"
+                value={currentField.maxFileSize || 5}
+                onChange={(e) => setCurrentField({ 
+                  ...currentField, 
+                  maxFileSize: parseInt(e.target.value) || 5 
+                })}
+                min="1"
+                max="50"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Allowed File Types
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {['image/*', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'application/zip'].map((type) => (
+                  <label key={type} className="inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={currentField.allowedFileTypes?.includes(type) || false}
+                      onChange={(e) => {
+                        const updatedTypes = e.target.checked
+                          ? [...(currentField.allowedFileTypes || []), type]
+                          : (currentField.allowedFileTypes || []).filter(t => t !== type);
+                        setCurrentField({ ...currentField, allowedFileTypes: updatedTypes });
+                      }}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">
+                      {type === 'image/*' ? 'Images' : 
+                       type === 'application/pdf' ? 'PDF' :
+                       type === 'application/msword' || type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ? 'Word Docs' :
+                       type === 'text/plain' ? 'Text Files' :
+                       type === 'application/zip' ? 'ZIP Archives' : type}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {currentField.type === 'number' && (
+          <div className="mt-4 grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Min Value
+              </label>
+              <input
+                type="number"
+                value={currentField.minValue || ''}
+                onChange={(e) => setCurrentField({ 
+                  ...currentField, 
+                  minValue: e.target.value ? parseInt(e.target.value) : undefined 
+                })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Max Value
+              </label>
+              <input
+                type="number"
+                value={currentField.maxValue || ''}
+                onChange={(e) => setCurrentField({ 
+                  ...currentField, 
+                  maxValue: e.target.value ? parseInt(e.target.value) : undefined 
+                })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+        )}
+
+        {(currentField.type === 'text' || currentField.type === 'textarea') && (
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Max Length (characters)
+            </label>
+            <input
+              type="number"
+              value={currentField.maxLength || ''}
+              onChange={(e) => setCurrentField({ 
+                ...currentField, 
+                maxLength: e.target.value ? parseInt(e.target.value) : undefined 
+              })}
+              min="1"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        )}
+
+        {currentField.type === 'rating' && (
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Max Rating Value
+            </label>
+            <select
+              value={currentField.maxValue || 5}
+              onChange={(e) => setCurrentField({ 
+                ...currentField, 
+                maxValue: parseInt(e.target.value) 
+              })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="5">5 Stars</option>
+              <option value="10">10 Points</option>
+            </select>
+          </div>
+        )}
+
+        <div className="mt-6 flex justify-end">
+          {isEditing ? (
+            <div className="flex space-x-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditing(false);
+                  setEditIndex(-1);
+                  setCurrentField({
+                    id: '',
+                    type: 'text',
+                    label: '',
+                    placeholder: '',
+                    required: false,
+                    options: [''],
+                  });
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleAddField}
+                className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Update Field
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleAddField}
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              disabled={!currentField.label.trim()}
+            >
+              Add Field
             </button>
           )}
-          <button
-            type="button"
-            onClick={handleAddField}
-            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            {isEditing ? 'Update Field' : 'Add Field'}
-          </button>
         </div>
       </div>
 
