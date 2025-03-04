@@ -23,51 +23,81 @@ export default function DashboardPage() {
   const [forms, setForms] = useState<Form[]>([]);
   const [emailLists, setEmailLists] = useState<EmailList[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!user) return;
+      if (!user) {
+        console.log('No user available for API calls');
+        setLoading(false);
+        return;
+      }
 
       try {
+        console.log('Fetching dashboard data for user:', user.email);
         const token = await user.getIdToken();
+        console.log('Got token for API calls');
         
         // Fetch forms
-        const formsResponse = await fetch('/api/forms', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        
-        if (formsResponse.ok) {
-          const formsData = await formsResponse.json();
-          setForms(formsData.forms);
+        try {
+          const formsResponse = await fetch('/api/forms', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          
+          if (formsResponse.ok) {
+            const formsData = await formsResponse.json();
+            console.log('Forms fetched:', formsData.forms.length);
+            setForms(formsData.forms);
+          } else {
+            console.error('Failed to fetch forms:', await formsResponse.text());
+          }
+        } catch (formError) {
+          console.error('Error fetching forms:', formError);
         }
         
         // Fetch email lists
-        const emailListsResponse = await fetch('/api/email-lists', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        
-        if (emailListsResponse.ok) {
-          const emailListsData = await emailListsResponse.json();
-          setEmailLists(emailListsData.emailLists);
+        try {
+          const emailListsResponse = await fetch('/api/email-lists', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          
+          if (emailListsResponse.ok) {
+            const emailListsData = await emailListsResponse.json();
+            console.log('Email lists fetched:', emailListsData.emailLists.length);
+            setEmailLists(emailListsData.emailLists);
+          } else {
+            console.error('Failed to fetch email lists:', await emailListsResponse.text());
+          }
+        } catch (emailError) {
+          console.error('Error fetching email lists:', emailError);
         }
       } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+        console.error('Error in dashboard data fetching:', error);
+        setError('Failed to load dashboard data. Please try again.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    if (user) {
+      fetchData();
+    }
   }, [user]);
 
   return (
     <Dashboard>
       <div className="px-4 py-6">
         <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+        
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
         
         {loading ? (
           <div className="flex justify-center">

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { 
   User, 
@@ -44,7 +46,7 @@ const createDummyUser = (email: string) => {
       claims: {}
     }),
     reload: async () => {},
-    toJSON: () => ({}),
+    toJSON: () => ({ uid, email, displayName: email.split('@')[0] }),
     phoneNumber: null,
     photoURL: null,
     providerId: 'password',
@@ -71,7 +73,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const storedUser = localStorage.getItem('dummyUser');
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser) as User);
+        const parsedUser = JSON.parse(storedUser);
+        // Recreate the user object with methods
+        const dummyUser = createDummyUser(parsedUser.email);
+        console.log('Restored user from localStorage:', dummyUser.email);
+        setUser(dummyUser);
       } catch (e) {
         console.error("Failed to parse stored user", e);
         localStorage.removeItem('dummyUser');
@@ -86,6 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Store in localStorage to persist across refreshes
     localStorage.setItem('dummyUser', JSON.stringify(dummyUser));
+    console.log('User signed up:', email);
     
     // Update state
     setUser(dummyUser);
@@ -97,6 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Store in localStorage to persist across refreshes
     localStorage.setItem('dummyUser', JSON.stringify(dummyUser));
+    console.log('User logged in:', email);
     
     // Update state
     setUser(dummyUser);
@@ -105,6 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     // Clear the stored user
     localStorage.removeItem('dummyUser');
+    console.log('User logged out');
     
     // Update state
     setUser(null);

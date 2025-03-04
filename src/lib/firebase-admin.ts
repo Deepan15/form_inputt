@@ -9,22 +9,27 @@ class MockAuth {
     
     // Extract user ID from token if it's in our expected format
     let uid = 'dummy-user-id';
+    let email = 'user@example.com';
+    
     try {
       // If token is in JSON format with a uid field, use that
       const parsedToken = JSON.parse(token);
       if (parsedToken.uid) {
         uid = parsedToken.uid;
       }
-    } catch (e) {
-      // If token is not JSON, check if it's our dummy token format
-      if (token.includes('uid:')) {
-        uid = token.split('uid:')[1].split(',')[0];
+      if (parsedToken.email) {
+        email = parsedToken.email;
       }
+      
+      console.log('Successfully verified token for user:', uid);
+    } catch (e) {
+      // If token is not JSON, use a default user
+      console.log('Using default user for non-JSON token');
     }
     
     return {
       uid,
-      email: 'user@example.com',
+      email,
       email_verified: true,
     };
   }

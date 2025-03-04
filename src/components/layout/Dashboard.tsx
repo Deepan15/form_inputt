@@ -1,21 +1,19 @@
 'use client';
-import React, { ReactNode, useState, useEffect } from 'react';
-import Navbar from './Navbar';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function Dashboard({ children }: { children: React.ReactNode }) {
-  const auth = useAuth();
-  const user = auth.user;
-  const logout = auth.logout; // Changed from signOut to logout to match AuthContext
-  const loading = auth.loading;
+  const { user, loading } = useAuth();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   const handleSignOut = async () => {
     try {
-      await logout(); // Changed from signOut to logout
+      const { logout } = useAuth();
+      await logout();
       router.push('/login');
     } catch (error) {
       console.error('Error signing out:', error);
@@ -23,12 +21,17 @@ export default function Dashboard({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    if (!loading && !user) {
+    // Only redirect if not loading and no user
+    if (!loading && !user && !isRedirecting) {
+      console.log('No user found, redirecting to login');
+      setIsRedirecting(true);
       router.push('/login');
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, isRedirecting]);
 
+  // Show loading spinner while authentication is being checked
   if (loading) {
+    console.log('Dashboard is loading...');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -36,9 +39,13 @@ export default function Dashboard({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // If no user and not loading, return null (will redirect in useEffect)
   if (!user) {
-    return null; // Will redirect in the useEffect
+    console.log('No user in Dashboard component');
+    return null;
   }
+
+  console.log('Rendering Dashboard with user:', user.email);
 
   return (
     <div className="min-h-screen bg-gray-100">
