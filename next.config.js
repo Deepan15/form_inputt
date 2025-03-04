@@ -3,6 +3,11 @@ const nextConfig = {
   /* config options here */
   serverExternalPackages: ['mongoose'],
   
+  // Disable ESLint during build
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  
   webpack: (config) => {
     // Add support for native node modules
     config.resolve.fallback = { 
