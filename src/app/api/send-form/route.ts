@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from 'firebase-admin/auth';
+import { adminAuth } from '@/lib/firebase-admin';
 import connectToDatabase from '@/lib/mongodb';
 import Form from '@/models/Form';
 import sgMail from '@sendgrid/mail';
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     }
 
     const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await getAuth().verifyIdToken(token);
+    const decodedToken = await adminAuth.verifyIdToken(token);
     const userId = decodedToken.uid;
 
     const { formId, emails, senderName } = await req.json();

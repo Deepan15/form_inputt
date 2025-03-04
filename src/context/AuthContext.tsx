@@ -20,8 +20,10 @@ interface AuthContextProps {
 
 // Create a dummy user object that mimics Firebase User
 const createDummyUser = (email: string) => {
+  const uid = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  
   return {
-    uid: 'dummy-uid-123456',
+    uid,
     email: email,
     displayName: email.split('@')[0],
     emailVerified: true,
@@ -31,9 +33,9 @@ const createDummyUser = (email: string) => {
     refreshToken: '',
     tenantId: null,
     delete: async () => {},
-    getIdToken: async () => 'dummy-token',
+    getIdToken: async () => JSON.stringify({ uid, email }),
     getIdTokenResult: async () => ({ 
-      token: 'dummy-token',
+      token: JSON.stringify({ uid, email }),
       authTime: new Date().toISOString(),
       issuedAtTime: new Date().toISOString(),
       expirationTime: new Date(Date.now() + 3600000).toISOString(),

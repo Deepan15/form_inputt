@@ -11,17 +11,12 @@ export default function LoginForm() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const auth = useAuth();
-  
-  // Type assertion to help TypeScript understand the structure
-  type AuthContextType = {
-    signIn?: (email: string, password: string) => Promise<void>;
-  };
+  const { login } = useAuth();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!auth || typeof (auth as AuthContextType).signIn !== 'function') {
+    if (!login) {
       setError('Authentication service not available');
       return;
     }
@@ -29,7 +24,7 @@ export default function LoginForm() {
     try {
       setError('');
       setLoading(true);
-      await (auth as AuthContextType).signIn?.(email, password);
+      await login(email, password);
       router.push('/dashboard');
     } catch (error: any) {
       setError(error.message || 'Failed to sign in');

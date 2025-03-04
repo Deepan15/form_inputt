@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Form Builder Application
+
+A dynamic form builder application built with Next.js, MongoDB, and React. This application allows users to create, share, and collect responses from custom forms.
+
+## Features
+
+- Create custom forms with various field types (text, email, number, date, dropdown, checkbox, textarea)
+- Share forms via email
+- Collect and view form responses
+- Manage email lists for form distribution
+
+## Prerequisites
+
+- Node.js (v18 or later)
+- MongoDB (v4.4 or later)
+- npm or yarn
 
 ## Getting Started
 
-First, run the development server:
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+3. Set up environment variables:
+   - Copy `.env.local.example` to `.env.local` (if not already present)
+   - Update the MongoDB URI and other configuration values as needed
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Start MongoDB:
+   ```bash
+   # Using the provided script
+   ./scripts/start-mongodb.sh
+   
+   # Or manually start MongoDB based on your installation
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+5. Run the development server:
+   ```bash
+   # Start with MongoDB check
+   npm run dev:with-db
+   
+   # Or start without MongoDB check
+   npm run dev
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+6. Open [http://localhost:3000](http://localhost:3000) in your browser (or the port shown in the console)
 
-## Learn More
+## Usage
 
-To learn more about Next.js, take a look at the following resources:
+1. Sign up for an account
+2. Create a new form from the dashboard
+3. Add fields to your form
+4. Save and share your form
+5. View responses in the dashboard
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Development Notes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- This application uses a mock Firebase authentication for development purposes
+- SendGrid is used for email functionality
+- MongoDB is used for data storage
 
-## Deploy on Vercel
+## License
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT

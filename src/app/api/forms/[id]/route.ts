@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from 'firebase-admin/auth';
+import { adminAuth } from '@/lib/firebase-admin';
 import connectToDatabase from '@/lib/mongodb';
 import Form from '@/models/Form';
 import { initFirebaseAdmin } from '@/lib/firebase-admin';
@@ -22,15 +22,14 @@ export async function GET(
     }
 
     const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await getAuth().verifyIdToken(token);
+    const decodedToken = await adminAuth.verifyIdToken(token);
     const userId = decodedToken.uid;
 
     const { id } = params;
 
     await connectToDatabase();
 
-    const form = await Form.findOne({ _id: id, userId }).lean();
-    
+    const form = await Form.findOne({ _id: id, userId });
     if (!form) {
       return NextResponse.json(
         { error: 'Form not found' },
@@ -63,7 +62,7 @@ export async function PUT(
     }
 
     const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await getAuth().verifyIdToken(token);
+    const decodedToken = await adminAuth.verifyIdToken(token);
     const userId = decodedToken.uid;
 
     const { id } = params;
@@ -79,7 +78,6 @@ export async function PUT(
     await connectToDatabase();
 
     const form = await Form.findOne({ _id: id, userId });
-    
     if (!form) {
       return NextResponse.json(
         { error: 'Form not found' },
@@ -93,9 +91,9 @@ export async function PUT(
 
     await form.save();
 
-    return NextResponse.json({ 
-      form, 
-      message: 'Form updated successfully' 
+    return NextResponse.json({
+      form,
+      message: 'Form updated successfully',
     });
   } catch (error) {
     console.error('Error updating form:', error);
@@ -121,7 +119,7 @@ export async function DELETE(
     }
 
     const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await getAuth().verifyIdToken(token);
+    const decodedToken = await adminAuth.verifyIdToken(token);
     const userId = decodedToken.uid;
 
     const { id } = params;
@@ -129,7 +127,6 @@ export async function DELETE(
     await connectToDatabase();
 
     const form = await Form.findOne({ _id: id, userId });
-    
     if (!form) {
       return NextResponse.json(
         { error: 'Form not found' },
@@ -139,8 +136,8 @@ export async function DELETE(
 
     await form.deleteOne();
 
-    return NextResponse.json({ 
-      message: 'Form deleted successfully' 
+    return NextResponse.json({
+      message: 'Form deleted successfully',
     });
   } catch (error) {
     console.error('Error deleting form:', error);

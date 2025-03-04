@@ -95,7 +95,7 @@ const FormPreview: React.FC<FormPreviewProps> = ({
             ))}
           </select>
         );
-      case 'boolean':
+      case 'checkbox':
         return (
           <div className="flex items-center">
             <input
@@ -113,6 +113,28 @@ const FormPreview: React.FC<FormPreviewProps> = ({
           <input
             type="date"
             id={field.id}
+            value={responses[field.id] || ''}
+            onChange={(e) => handleChange(field.id, e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        );
+      case 'email':
+        return (
+          <input
+            type="email"
+            id={field.id}
+            placeholder={field.placeholder}
+            value={responses[field.id] || ''}
+            onChange={(e) => handleChange(field.id, e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        );
+      case 'number':
+        return (
+          <input
+            type="number"
+            id={field.id}
+            placeholder={field.placeholder}
             value={responses[field.id] || ''}
             onChange={(e) => handleChange(field.id, e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuth } from 'firebase-admin/auth';
+import { adminAuth } from '@/lib/firebase-admin';
 import connectToDatabase from '@/lib/mongodb';
 import Form from '@/models/Form';
 import FormResponse from '@/models/FormResponse';
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     }
 
     const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await getAuth().verifyIdToken(token);
+    const decodedToken = await adminAuth.verifyIdToken(token);
     const userId = decodedToken.uid;
 
     const url = new URL(req.url);
