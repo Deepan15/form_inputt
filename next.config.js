@@ -10,12 +10,13 @@ const nextConfig = {
         // Add any aliases needed for Turbopack
       },
       // Apply the same webpack fallbacks to Turbopack
-      rules: [
-        {
+      rules: {
+        // Configure rules as an object, not an array
+        resolveModules: {
           test: /node_modules/,
-          type: 'resolve',
-        },
-      ],
+          type: 'resolve'
+        }
+      }
     },
   },
   
