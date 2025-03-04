@@ -3,11 +3,7 @@ import React, { ReactNode, useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-'use client';
-// import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-// import { useAuth } from '@/context/AuthContext';
-// import { useRouter } from 'next/navigation';
 
 export default function Dashboard({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
@@ -164,50 +160,3 @@ export default function Dashboard({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-interface DashboardProps {
-  children: ReactNode;
-}
-
-// Remove duplicate Dashboard implementation
-  const { user, loading } = useAuth();
-  const router = useRouter();
-
-  // Redirect if not logged in
-  React.useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
-
-// Move loading check inside DashboardLayout component
-const LoadingSpinner = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-  </div>
-);
-
-// Move loading check inside a function component
-function LoadingCheck() {
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-  return null;
-}
-
-// This code appears to be outside a function component
-// To fix the 'return' statement error, this check should be moved inside a function
-// For now, we'll remove it since the same check exists in the main Dashboard component above
-
-// This return statement needs to be inside a function component
-function DashboardLayout({ children }: DashboardProps) {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {children}
-      </main>
-    </div>
-)};
-// Remove this extra closing brace as it's not needed
-
-// Remove default export since we already have one above
