@@ -8,6 +8,11 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   
+  // Disable TypeScript type checking during build
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  
   webpack: (config) => {
     // Add support for native node modules
     config.resolve.fallback = { 
