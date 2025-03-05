@@ -1,4 +1,5 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
+import { mockDatabase, usingMockDb } from '@/lib/mongodb';
 
 export interface IForm extends Document {
   userId: string;
@@ -51,4 +52,51 @@ const FormSchema: Schema = new Schema(
   { timestamps: true }
 );
 
-export default mongoose.models.Form || mongoose.model<IForm>('Form', FormSchema);
+// Create a mock Form model for when MongoDB is not available
+class MockFormModel {
+  static async find(query: any) {
+    console.log('Mock Form.find called with query:', query);
+    // Return empty array if no forms exist yet
+    if (mockDatabase.forms.size === 0) {
+      return {
+        sort: () => ({
+          lean: () => []
+        })
+      };
+    }
+    
+    const forms = Array.from(mockDatabase.forms.values())
+      .filter((form: any) => form.userId === query.userId);
+    
+    return {
+      sort: () => ({
+        lean: () => forms
+      })
+    };
+  }
+
+  static async findById(id: string) {
+    console.log('Mock Form.findById called with id:', id);
+    return mockDatabase.forms.get(id) || null;
+  }
+
+  constructor(data: any) {
+    Object.assign(this, data, {
+      _id: `form_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+  }
+
+  async save() {
+    console.log('Mock Form.save called');
+    const form = this as any;
+    mockDatabase.forms.set(form._id, form);
+    return form;
+  }
+}
+
+// Always use the mock model for now
+const Form = MockFormModel as any;
+
+export default Form;

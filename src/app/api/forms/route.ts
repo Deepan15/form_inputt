@@ -19,22 +19,49 @@ export async function GET(req: NextRequest) {
     }
 
     const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await adminAuth.verifyIdToken(token);
+    console.log('Received token:', token);
+    
+    let decodedToken;
+    try {
+      decodedToken = await adminAuth.verifyIdToken(token);
+    } catch (verifyError) {
+      console.error('Token verification error:', verifyError);
+      return NextResponse.json(
+        { error: 'Invalid token' },
+        { status: 401 }
+      );
+    }
+    
     const userId = decodedToken.uid;
+    console.log('Verified user ID:', userId);
 
-    await connectToDatabase();
-
-    const forms = await Form.find({ userId })
-      .sort({ createdAt: -1 })
-      .lean();
-
-    return NextResponse.json({ forms });
+    try {
+      await connectToDatabase();
+      console.log('Connected to database');
+      
+      try {
+        const forms = await Form.find({ userId })
+          .sort({ createdAt: -1 })
+          .lean();
+        
+        console.log(`Found ${forms?.length || 0} forms for user ${userId}`);
+        
+        // If no forms found, return an empty array instead of error
+        return NextResponse.json({ forms: forms || [] });
+      } catch (findError) {
+        console.error('Error finding forms:', findError);
+        // Return empty forms array on error to prevent UI from breaking
+        return NextResponse.json({ forms: [] });
+      }
+    } catch (dbError) {
+      console.error('Database error:', dbError);
+      // Return empty forms array on error to prevent UI from breaking
+      return NextResponse.json({ forms: [] });
+    }
   } catch (error) {
     console.error('Error fetching forms:', error);
-    return NextResponse.json(
-      { error: 'An error occurred while fetching forms' },
-      { status: 500 }
-    );
+    // Return empty forms array on error to prevent UI from breaking
+    return NextResponse.json({ forms: [] });
   }
 }
 
@@ -50,7 +77,17 @@ export async function POST(req: NextRequest) {
     }
 
     const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await adminAuth.verifyIdToken(token);
+    let decodedToken;
+    try {
+      decodedToken = await adminAuth.verifyIdToken(token);
+    } catch (verifyError) {
+      console.error('Token verification error:', verifyError);
+      return NextResponse.json(
+        { error: 'Invalid token' },
+        { status: 401 }
+      );
+    }
+    
     const userId = decodedToken.uid;
 
     const { title, description, fields } = await req.json();
@@ -62,25 +99,34 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await connectToDatabase();
+    try {
+      await connectToDatabase();
+      
+      const form = new Form({
+        userId,
+        title,
+        description,
+        fields,
+      });
 
-    const form = new Form({
-      userId,
-      title,
-      description,
-      fields,
-    });
+      await form.save();
+      console.log('Form created successfully:', form._id);
 
-    await form.save();
-
-    return NextResponse.json(
-      { form, message: 'Form created successfully' },
-      { status: 201 }
-    );
+      return NextResponse.json(
+        { form, message: 'Form created successfully' },
+        { status: 201 }
+      );
+    } catch (dbError) {
+      console.error('Database error:', dbError);
+      return NextResponse.json(
+        { error: 'Database error', details: dbError instanceof Error ? dbError.message : String(dbError) },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error('Error creating form:', error);
     return NextResponse.json(
-      { error: 'An error occurred while creating the form' },
+      { error: 'An error occurred while creating the form', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

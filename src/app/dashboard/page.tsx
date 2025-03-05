@@ -19,74 +19,88 @@ interface EmailList {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [forms, setForms] = useState<Form[]>([]);
   const [emailLists, setEmailLists] = useState<EmailList[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user) {
-        console.log('No user available for API calls');
-        setLoading(false);
-        return;
-      }
-
-      try {
-        console.log('Fetching dashboard data for user:', user.email);
-        const token = await user.getIdToken();
-        console.log('Got token for API calls');
-        
-        // Fetch forms
-        try {
-          const formsResponse = await fetch('/api/forms', {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          
-          if (formsResponse.ok) {
-            const formsData = await formsResponse.json();
-            console.log('Forms fetched:', formsData.forms.length);
-            setForms(formsData.forms);
-          } else {
-            console.error('Failed to fetch forms:', await formsResponse.text());
-          }
-        } catch (formError) {
-          console.error('Error fetching forms:', formError);
-        }
-        
-        // Fetch email lists
-        try {
-          const emailListsResponse = await fetch('/api/email-lists', {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          
-          if (emailListsResponse.ok) {
-            const emailListsData = await emailListsResponse.json();
-            console.log('Email lists fetched:', emailListsData.emailLists.length);
-            setEmailLists(emailListsData.emailLists);
-          } else {
-            console.error('Failed to fetch email lists:', await emailListsResponse.text());
-          }
-        } catch (emailError) {
-          console.error('Error fetching email lists:', emailError);
-        }
-      } catch (error) {
-        console.error('Error in dashboard data fetching:', error);
-        setError('Failed to load dashboard data. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user) {
-      fetchData();
+  // Simplified fetch function
+  const fetchData = async () => {
+    if (!user) {
+      console.log('No user available for API calls');
+      setLoading(false);
+      return;
     }
-  }, [user]);
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log('Fetching dashboard data for user:', user.email);
+      const token = await user.getIdToken();
+      
+      // Fetch forms
+      const formsResponse = await fetch('/api/forms', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      if (formsResponse.ok) {
+        const formsData = await formsResponse.json();
+        setForms(formsData.forms || []);
+      } else {
+        console.error('Failed to fetch forms');
+        // Don't set error, just use empty array
+        setForms([]);
+      }
+      
+      // Fetch email lists
+      const emailListsResponse = await fetch('/api/email-lists', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      if (emailListsResponse.ok) {
+        const emailListsData = await emailListsResponse.json();
+        setEmailLists(emailListsData.emailLists || []);
+      } else {
+        console.error('Failed to fetch email lists');
+        // Don't set error, just use empty array
+        setEmailLists([]);
+      }
+    } catch (error) {
+      console.error('Error in dashboard data fetching:', error);
+      // Don't set error, just use empty arrays
+      setForms([]);
+      setEmailLists([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Only fetch data once when the user is available
+  useEffect(() => {
+    if (!authLoading && user) {
+      fetchData();
+    } else if (!authLoading) {
+      setLoading(false);
+    }
+  }, [user, authLoading]);
+
+  // If auth is still loading, show a loading spinner
+  if (authLoading) {
+    return (
+      <Dashboard>
+        <div className="flex justify-center py-10">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <p className="ml-3 text-gray-600">Loading authentication...</p>
+        </div>
+      </Dashboard>
+    );
+  }
 
   return (
     <Dashboard>
@@ -96,12 +110,22 @@ export default function DashboardPage() {
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
+            <button 
+              onClick={() => {
+                setError(null);
+                fetchData();
+              }}
+              className="ml-4 underline"
+            >
+              Try Again
+            </button>
           </div>
         )}
         
         {loading ? (
           <div className="flex justify-center">
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+            <p className="ml-3 text-gray-600">Loading data...</p>
           </div>
         ) : (
           <>

@@ -21,11 +21,15 @@ const SignupForm: React.FC = () => {
     try {
       setError('');
       setLoading(true);
+      
+      // Sign up the user
       await signup(email, password);
+      
+      // Redirect to dashboard immediately
       router.push('/dashboard');
     } catch (error: any) {
+      console.error('Signup error:', error);
       setError('Failed to create an account: ' + (error.message || 'Unknown error'));
-    } finally {
       setLoading(false);
     }
   };

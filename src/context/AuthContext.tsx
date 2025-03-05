@@ -14,15 +14,18 @@ import { auth } from '@/lib/firebase';
 interface AuthContextProps {
   user: User | null;
   loading: boolean;
-  signup: (email: string, password: string) => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string) => Promise<User>;
+  login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
 }
 
 // Create a dummy user object that mimics Firebase User
 const createDummyUser = (email: string) => {
-  const uid = `user-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  // Create a deterministic uid based on email to avoid hydration mismatches
+  // This is for demo purposes only - in a real app, use a proper UUID
+  const emailHash = email.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const uid = `user-${emailHash}-${email.replace(/[^a-z0-9]/gi, '')}`;
   
   return {
     uid,
@@ -35,7 +38,10 @@ const createDummyUser = (email: string) => {
     refreshToken: '',
     tenantId: null,
     delete: async () => {},
-    getIdToken: async () => JSON.stringify({ uid, email }),
+    getIdToken: async () => {
+      // Create a token that the mock Firebase Admin can understand
+      return JSON.stringify({ uid, email });
+    },
     getIdTokenResult: async () => ({ 
       token: JSON.stringify({ uid, email }),
       authTime: new Date().toISOString(),
@@ -53,11 +59,14 @@ const createDummyUser = (email: string) => {
   } as User;
 };
 
+// Create a dummy user for the default context
+const dummyContextUser = createDummyUser('default@example.com');
+
 const AuthContext = createContext<AuthContextProps>({
   user: null,
   loading: true,
-  signup: async () => {},
-  login: async () => {},
+  signup: async () => dummyContextUser,
+  login: async () => dummyContextUser,
   logout: async () => {},
   resetPassword: async () => {},
 });
@@ -86,28 +95,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(false);
   }, []);
 
-  const signup = async (email: string, password: string) => {
+  const signup = async (email: string, password: string): Promise<User> => {
     // Create a dummy user instead of using Firebase
     const dummyUser = createDummyUser(email);
     
     // Store in localStorage to persist across refreshes
-    localStorage.setItem('dummyUser', JSON.stringify(dummyUser));
+    localStorage.setItem('dummyUser', JSON.stringify({
+      uid: dummyUser.uid,
+      email: dummyUser.email,
+    }));
     console.log('User signed up:', email);
     
     // Update state
     setUser(dummyUser);
+    
+    // Return the user object for immediate use
+    return dummyUser;
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<User> => {
     // Create a dummy user instead of using Firebase
     const dummyUser = createDummyUser(email);
     
     // Store in localStorage to persist across refreshes
-    localStorage.setItem('dummyUser', JSON.stringify(dummyUser));
+    localStorage.setItem('dummyUser', JSON.stringify({
+      uid: dummyUser.uid,
+      email: dummyUser.email,
+    }));
     console.log('User logged in:', email);
     
     // Update state
     setUser(dummyUser);
+    
+    // Return the user object for immediate use
+    return dummyUser;
   };
 
   const logout = async () => {

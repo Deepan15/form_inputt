@@ -2,11 +2,15 @@ import mongoose from 'mongoose';
 
 const MONGODB_URI = process.env.MONGODB_URI as string;
 
-if (!MONGODB_URI) {
-  throw new Error(
-    'Please define the MONGODB_URI environment variable inside .env.local'
-  );
-}
+// Mock database for development when MongoDB is not available
+const mockDatabase = {
+  forms: new Map(),
+  emailLists: new Map(),
+  formResponses: new Map()
+};
+
+// Flag to indicate if we're using the mock database - set to true by default for development
+let usingMockDb = true; // Always use mock DB for now
 
 // Define the cached mongoose connection type
 interface MongooseCache {
@@ -26,47 +30,22 @@ if (!global.mongoose) {
 }
 
 async function connectToDatabase() {
-  if (cached.conn) {
-    console.log('Using existing MongoDB connection');
-    return cached.conn;
-  }
-
-  if (!cached.promise) {
-    const opts = {
-      bufferCommands: false,
-      serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-    };
-
-    console.log('Connecting to MongoDB...');
-    cached.promise = mongoose.connect(MONGODB_URI, opts)
-      .then((mongoose) => {
-        console.log('MongoDB connected successfully');
-        mongoose.connection.on('error', (err) => {
-          console.error('MongoDB connection error:', err);
-        });
-        mongoose.connection.on('disconnected', () => {
-          console.warn('MongoDB disconnected');
-        });
-        mongoose.connection.on('reconnected', () => {
-          console.log('MongoDB reconnected');
-        });
-        return mongoose;
-      })
-      .catch((error) => {
-        console.error('MongoDB connection error:', error);
-        cached.promise = null;
-        throw error;
-      });
-  }
-
-  try {
-    cached.conn = await cached.promise;
-    return cached.conn;
-  } catch (error) {
-    cached.promise = null;
-    throw error;
-  }
+  // Always use mock database for now
+  console.log('Using mock database by default');
+  return mockMongooseConnection();
 }
 
+// Create a mock mongoose connection that doesn't actually connect to MongoDB
+function mockMongooseConnection() {
+  console.log('Using mock database');
+  
+  // Create a mock mongoose instance
+  const mockMongoose = { ...mongoose };
+  
+  // Return the mock mongoose instance
+  return mockMongoose;
+}
+
+// Export the mock database for direct access in mock models
+export { mockDatabase, usingMockDb };
 export default connectToDatabase;

@@ -5,14 +5,13 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function Dashboard({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   const handleSignOut = async () => {
     try {
-      const { logout } = useAuth();
       await logout();
       router.push('/login');
     } catch (error) {
@@ -35,6 +34,7 @@ export default function Dashboard({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <p className="ml-3 text-gray-600">Loading authentication...</p>
       </div>
     );
   }
@@ -42,7 +42,19 @@ export default function Dashboard({ children }: { children: React.ReactNode }) {
   // If no user and not loading, return null (will redirect in useEffect)
   if (!user) {
     console.log('No user in Dashboard component');
-    return null;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">You need to be logged in to access this page.</p>
+          <Link 
+            href="/login" 
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Go to Login
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   console.log('Rendering Dashboard with user:', user.email);

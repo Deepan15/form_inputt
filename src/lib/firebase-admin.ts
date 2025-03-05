@@ -16,22 +16,31 @@ class MockAuth {
       const parsedToken = JSON.parse(token);
       if (parsedToken.uid) {
         uid = parsedToken.uid;
+        console.log('Using uid from token:', uid);
       }
       if (parsedToken.email) {
         email = parsedToken.email;
+        console.log('Using email from token:', email);
       }
       
       console.log('Successfully verified token for user:', uid);
+      
+      return {
+        uid,
+        email,
+        email_verified: true,
+      };
     } catch (e) {
       // If token is not JSON, use a default user
       console.log('Using default user for non-JSON token');
+      console.error('Token parse error:', e);
+      
+      return {
+        uid,
+        email,
+        email_verified: true,
+      };
     }
-    
-    return {
-      uid,
-      email,
-      email_verified: true,
-    };
   }
 }
 
